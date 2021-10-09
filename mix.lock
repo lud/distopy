@@ -1,0 +1,3 @@
+%{
+  "dotenvy": {:hex, :dotenvy, "0.5.0", "0c74ddcb185aefc67018983ffc3147f4dbbf60513a7f9f4ff6884a39394d9ef6", [:mix], [], "hexpm", "6fef1947416804a23034fc1718152d625e53a1218d1b9b5af65e59cb26992a98"},
+}
