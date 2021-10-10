@@ -20,8 +20,11 @@ defprotocol Distopy.Source do
   @spec display_name(t) :: iolist()
   def display_name(t)
 
-  @spec get_value!(t, key :: binary) :: binary
-  def get_value!(t, key)
+  @spec get_value(t, key :: binary) :: binary
+  def get_value(t, key)
+
+  @spec display_value(t, key :: binary) :: iolist
+  def display_value(t, key)
 
   @spec add_pair(t, key :: binary, value :: binary) :: {:ok, t} | {:error, binary}
   def add_pair(t, key, value)
@@ -31,6 +34,9 @@ defprotocol Distopy.Source do
 
   @spec pairs_to_iolist(t, [{key :: binary, value :: binary}]) :: iolist()
   def pairs_to_iolist(t, pairs)
+
+  @spec pair_to_iolist(t, key :: binary, value :: binary) :: iolist()
+  def pair_to_iolist(t, key, value)
 end
 
 defmodule Distopy.Source.Helpers do

@@ -4,6 +4,8 @@ defmodule Mix.Tasks.Env.Diff do
   alias Distopy.Source.{EnvFile}
   alias Distopy.Presenter.CLI
 
+  @version Distopy.MixProject.project() |> Keyword.fetch!(:version)
+
   @args_schema [dist: [:string, :keep], file: [:string, :keep], fix: :boolean]
 
   @impl true
@@ -11,7 +13,6 @@ defmodule Mix.Tasks.Env.Diff do
     argv
     |> parse_args()
     |> do_run()
-    |> IO.inspect(label: ~S[run result])
   end
 
   defp parse_args(argv) do
@@ -74,52 +75,58 @@ defmodule Mix.Tasks.Env.Diff do
 
   defp print_usage do
     """
-    Diff env tool
+
+    #{to_string(colored("mix env.diff", :bright))} #{@version}
 
     Compares distributed and local env files.
 
-    Files given as --dist will be read and merged to determine the required
+    Files given as #{to_string(colored("--dist", :bright))} will be read and merged to determine the required
     environment variable names.
 
-    Files given as --check will be read and merged to determine the local
+    Files given as #{to_string(colored("--file", :bright))} will be read and merged to determine the local
     environment configuration.
 
     The tool will then print missing and extra local variables.
 
     Usage
-    mix env.diff --dist .env.dist --check .env --check .env.test
+    mix env.diff --dist .env.dist --file .env --file .env.test
 
     Options
-    --dist      Add a dist file
-    --file      Add an env file to check
-    --fix       Run the fixer to sync files
+    #{to_string(colored("--dist", :bright))}      Add a dist file
+    #{to_string(colored("--file", :bright))}      Add an env file to check
+    #{to_string(colored("--fix", :bright))}       Run the interactive fixer to sync files
+
+    Note that the fixer will not do any modification to your files until you
+    choose to do so.
     """
     |> IO.puts()
   end
 
-  defp do_run(%{dist_files: dist, env_files: env, fix: fix} = _ctx) do
+  defp do_run(%{dist_files: dist, env_files: env, fix: fix} = ctx) do
     dist = if length(dist) == 1, do: EnvFile.new(hd(dist), color: :magenta)
     env = if length(env) == 1, do: EnvFile.new(hd(env), hide_values: true)
     %{missing: missing, extra: extra} = Distopy.diff_keys(dist, env)
 
     valid? = length(missing) == 0 and length(extra) == 0
 
-    if length(missing) > 0 do
-      CLI.print_missing(missing, dist, env)
-    end
-
-    if length(extra) > 0 do
-      CLI.print_extra(extra, dist, env)
-    end
+    if length(missing) > 0, do: CLI.print_missing(missing, dist, env)
+    if length(extra) > 0, do: CLI.print_extra(extra, dist, env)
 
     if valid? do
-      :ok
+      CLI.print_sync_ok(dist, env)
     else
-      if !fix do
-        IO.puts(:stderr, "\nrun with --fix to run the interactive fixer")
-      end
+      if fix do
+        if length(missing) > 0, do: CLI.fix_missing(missing, dist, env)
+        # if length(extra) > 0, do: CLI.fix_extra(extra, dist, env)
 
-      abort()
+        info("Fixer finished, checking new values")
+        # after the fixer ran, re-run the diff with fixer disabled to print out
+        # new differences
+        ctx |> Map.put(:fix, false) |> do_run()
+      else
+        IO.puts(:stderr, "\nrun with --fix to run the interactive fixer")
+        abort()
+      end
     end
   end
 end

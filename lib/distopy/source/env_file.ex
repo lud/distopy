@@ -37,7 +37,7 @@ defimpl Distopy.Source, for: Distopy.Source.EnvFile do
   @spec updatable?(t) :: boolean
   def updatable?(_), do: true
 
-  @spec list_sources(t) :: [{group_key :: term, display_name :: iolist()}]
+  @spec list_sources(t) :: [{group_key :: term, display_name :: iolist}]
   def list_sources(_),
     do: invalid_group!()
 
@@ -48,19 +48,26 @@ defimpl Distopy.Source, for: Distopy.Source.EnvFile do
   @spec group_key(t) :: term
   def group_key(t), do: t.path
 
-  @spec display_name(t) :: iolist()
+  @spec display_name(t) :: iolist
   def display_name(t),
     do: [Distopy.Shell.colored(t.path, t.color)]
 
-  @spec get_value!(t, key :: binary) :: binary
-  def get_value!(t, key) when is_map_key(t.vars, key) and not t.hide_values,
+  @spec get_value(t, key :: binary()) :: binary()
+  def get_value(t, key) when is_map_key(t.vars, key),
     do: Map.fetch!(t.vars, key)
 
-  def get_value!(t, key) when is_map_key(t.vars, key),
-    do: "**********"
-
-  def get_value!(t, key) when is_map_key(t.vars, key),
+  def get_value(t, key) when is_map_key(t.vars, key),
     do: invalid_key!(t, key)
+
+  @spec display_value(t, key :: binary) :: iolist
+  def display_value(%{hide_values: hide?} = t, key) do
+    value = get_value(t, key)
+
+    case hide? do
+      true -> "**********"
+      false -> value
+    end
+  end
 
   @spec add_pair(t, key :: binary, value :: binary) :: {:ok, t} | {:error, binary}
   def add_pair(t, key, value) do
@@ -72,10 +79,15 @@ defimpl Distopy.Source, for: Distopy.Source.EnvFile do
     raise "not implemented"
   end
 
-  @spec pairs_to_iolist(t, [{key :: binary, value :: binary}]) :: iolist()
-  def pairs_to_iolist(_, pairs) do
+  @spec pairs_to_iolist(t, [{key :: binary, value :: binary}]) :: iolist
+  def pairs_to_iolist(t, pairs) do
     pairs
-    |> Enum.map(fn {k, v} -> [k, "=", v] end)
+    |> Enum.map(fn {k, v} -> pair_to_iolist(t, k, v) end)
     |> Enum.intersperse("\n")
+  end
+
+  @spec pair_to_iolist(t, key :: binary, value :: binary) :: iolist
+  def pair_to_iolist(_t, key, value) do
+    [key, "=", value]
   end
 end
