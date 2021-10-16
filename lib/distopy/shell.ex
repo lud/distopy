@@ -28,10 +28,15 @@ defmodule Distopy.Shell do
   end
 
   def abort() do
-    System.halt(1)
+    abort(1)
   end
 
-  def abort(text) do
+  def abort(code) when is_integer(code) do
+    apply(System, :halt, [code])
+    Process.sleep(:infinity)
+  end
+
+  def abort(text) when is_list(text) or is_binary(text) do
     error(text)
     abort()
   end

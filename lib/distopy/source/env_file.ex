@@ -63,10 +63,7 @@ defimpl Distopy.Source, for: Distopy.Source.EnvFile do
   def display_value(%{hide_values: hide?} = t, key) do
     value = get_value(t, key)
 
-    case hide? do
-      true -> "**********"
-      false -> value
-    end
+    if hide?, do: "**********", else: value
   end
 
   @spec add_pair(t, key :: binary, value :: binary) :: {:ok, t} | {:error, binary}
@@ -79,14 +76,14 @@ defimpl Distopy.Source, for: Distopy.Source.EnvFile do
     raise "not implemented"
   end
 
-  @spec pairs_to_iolist(t, [{key :: binary, value :: binary}]) :: iolist
+  @spec pairs_to_iolist(t, [{key :: binary, value :: iolist}]) :: iolist
   def pairs_to_iolist(t, pairs) do
     pairs
     |> Enum.map(fn {k, v} -> pair_to_iolist(t, k, v) end)
     |> Enum.intersperse("\n")
   end
 
-  @spec pair_to_iolist(t, key :: binary, value :: binary) :: iolist
+  @spec pair_to_iolist(t, key :: binary, value :: iolist) :: iolist
   def pair_to_iolist(_t, key, value) do
     [key, "=", value]
   end

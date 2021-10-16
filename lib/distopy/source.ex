@@ -8,7 +8,7 @@ defprotocol Distopy.Source do
   @spec updatable?(t) :: boolean
   def updatable?(t)
 
-  @spec list_sources(t) :: [{group_key :: term, display_name :: iolist()}]
+  @spec list_sources(t) :: [{group_key :: term, display_name :: iolist}]
   def list_sources(t)
 
   @spec select_source(t, group_key :: term) :: t
@@ -17,7 +17,7 @@ defprotocol Distopy.Source do
   @spec group_key(t) :: term
   def group_key(t)
 
-  @spec display_name(t) :: iolist()
+  @spec display_name(t) :: iolist
   def display_name(t)
 
   @spec get_value(t, key :: binary) :: binary
@@ -32,10 +32,10 @@ defprotocol Distopy.Source do
   @spec delete_key(t, key :: binary) :: {:ok, t} | {:error, binary}
   def delete_key(t, key)
 
-  @spec pairs_to_iolist(t, [{key :: binary, value :: binary}]) :: iolist()
+  @spec pairs_to_iolist(t, [{key :: binary, value :: iolist}]) :: iolist
   def pairs_to_iolist(t, pairs)
 
-  @spec pair_to_iolist(t, key :: binary, value :: binary) :: iolist()
+  @spec pair_to_iolist(t, key :: binary, value :: iolist) :: iolist
   def pair_to_iolist(t, key, value)
 end
 

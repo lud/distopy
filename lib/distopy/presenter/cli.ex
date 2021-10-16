@@ -55,30 +55,118 @@ defmodule Distopy.Presenter.CLI do
   end
 
   def fix_missing(keys, dist_source, env_source) when is_list(keys) do
-    Enum.map(keys, &fix_undef(&1, env_source, dist_source))
+    Enum.reduce(keys, {env_source, dist_source}, &fix_undef/2)
   end
 
-  defp fix_undef(key, missing_source, providing_source) do
-    value = get_value(providing_source, key)
+  defp fix_undef(key, {missing_source, providing_source} = state) do
+    disp_miss = display_name(missing_source)
+    disp_prov = display_name(providing_source)
+
     value_disp = display_value(providing_source, key)
     pair_display = pair_to_iolist(missing_source, key, value_disp)
 
     info([
       "fixing ",
-      display_name(missing_source),
+      disp_miss,
       " missing ",
       colored(pair_display, :yellow)
     ])
 
-    todo("""
-    provide choices depending on the sources
-    - if missing_source is updatable, [a] add actual value (not display) from provider
-    - if missing_source is updatable, [e] prompt value
-    - if providing_source is updatable, [d] delete value from provider
-    - if providing_source is updatable, [d] delete value from provider
-    - if missing_source is a group, [c] change missing source
-    - if providing_source is a group, [x] change providing source
-    - [s] skip, [q] quit
-    """)
+    choice =
+      build_choice([
+        if updatable?(missing_source) do
+          {?a, "add above value to #{disp_miss}",
+           fn key, {missing_source, providing_source} = state ->
+             value = get_value(providing_source, key)
+
+             case add_pair(missing_source, key, value) do
+               {:ok, missing_source} -> {:ok, {missing_source, providing_source}}
+               {:error, reason} -> abort(reason)
+             end
+           end}
+        end,
+        if updatable?(missing_source) do
+          {?e, "enter value for #{disp_miss}",
+           fn key, {missing_source, providing_source} = state ->
+             value = prompt_value(key)
+
+             case add_pair(missing_source, key, value) do
+               {:ok, missing_source} -> {:ok, {missing_source, providing_source}}
+               {:error, reason} -> abort(reason)
+             end
+           end}
+        end,
+        if updatable?(providing_source) do
+          {?d, "delete from #{disp_prov}",
+           fn key, {missing_source, providing_source} = state ->
+             case delete_key(providing_source, key) do
+               {:ok, providing_source} -> {:ok, {missing_source, providing_source}}
+               {:error, reason} -> abort(reason)
+             end
+           end}
+        end,
+        if source_group?(missing_source) do
+          {?c, "change target file from #{disp_miss}",
+           fn key, {missing_source, providing_source} = state ->
+             missing_source =
+               missing_source
+               |> list_sources()
+               |> Enum.with_index(?a)
+               |> Enum.map(fn {{sub_key, sub_display}, letter} ->
+                 {letter, sub_display, fn missing -> select_source(missing, sub_key) end}
+               end)
+               |> build_choice()
+               |> run_choice([missing_source])
+
+             {:retry, {missing_source, providing_source}}
+           end}
+        end,
+        {?s, "skip", fn _, _ -> {:ok, state} end},
+        {?q, "quit", fn _, _ -> abort(0) end}
+      ])
+
+    choice |> IO.inspect(label: ~S[choice])
+
+    case run_choice(choice, [key, state]) do
+      {:ok, state} -> state
+      {:retry, state} -> fix_undef(key, state)
+      {:error, reason} -> abort(reason)
+      other -> raise "invalid return value `#{inspect(other)}` from action"
+    end
+  end
+
+  defp run_choice(%{actions: actions, display: display} = choice, args) do
+    case IO.gets([display, ?\n, "> "]) |> String.trim() do
+      <<letter>> when is_map_key(actions, letter) ->
+        action = Map.fetch!(actions, letter)
+        apply(action, args)
+
+      _ ->
+        warn("Eh?")
+        run_choice(choice, args)
+    end
+  end
+
+  defp build_choice(choices) when is_list(choices) do
+    {revorder, iolist, actions} =
+      Enum.reduce(choices, {[], [], []}, fn
+        {letter, display, action}, {letters, iolist, actions}
+        when letter in ?a..?z and is_function(action) ->
+          {[letter | letters], [[?[, letter, ?], 32, display] | iolist],
+           [{letter, action} | actions]}
+
+        nil, acc ->
+          acc
+      end)
+
+    %{
+      actions: Map.new(actions),
+      order: :lists.reverse(revorder),
+      display: iolist |> :lists.reverse() |> Enum.intersperse(10)
+    }
+  end
+
+  defp prompt_value(key) do
+    IO.gets("enter value for #{key}: ") |> String.trim()
   end
 end
