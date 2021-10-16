@@ -2,7 +2,6 @@ defmodule Mix.Tasks.Env.Diff do
   use Mix.Task
   import Distopy.Shell
   alias Distopy.Source.{EnvFile}
-  alias Distopy.Presenter.CLI
 
   @version Distopy.MixProject.project() |> Keyword.fetch!(:version)
 
@@ -129,7 +128,7 @@ defmodule Mix.Tasks.Env.Diff do
     end
   end
 
-  defp build_sources(%{dist_files: dist, env_files: env} = ctx) do
+  defp build_sources(%{dist_files: dist, env_files: env} = _ctx) do
     dist = case(length(dist), do: (1 -> EnvFile.new(hd(dist), color: :magenta)))
     env = case(length(env), do: (1 -> EnvFile.new(hd(env), hide_values: true)))
 
@@ -137,6 +136,6 @@ defmodule Mix.Tasks.Env.Diff do
   end
 
   defp diff(%{dist_source: dist, env_source: env}) do
-    %{missing: missing, extra: extra} = Distopy.diff_keys(dist, env)
+    %{missing: _, extra: _} = Distopy.diff_keys(dist, env)
   end
 end

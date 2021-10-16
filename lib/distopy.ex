@@ -12,8 +12,8 @@ defmodule Distopy do
   end
 
   def display_diff(
-        %{dist_source: dist, env_source: env} = sources,
-        %{missing: missing, extra: extra} = diff
+        %{dist_source: dist, env_source: env} = _sources,
+        %{missing: missing, extra: extra} = _diff
       ) do
     valid? = length(missing) == 0 and length(extra) == 0
 
@@ -29,8 +29,8 @@ defmodule Distopy do
   end
 
   def run_fixer(
-        %{dist_source: dist, env_source: env} = sources,
-        %{missing: missing, extra: extra} = diff
+        %{dist_source: dist, env_source: env} = _sources,
+        %{missing: missing, extra: extra} = _diff
       ) do
     if length(missing) > 0, do: CLI.fix_missing(missing, dist, env)
     if length(extra) > 0, do: CLI.fix_extra(extra, dist, env)
