@@ -68,7 +68,8 @@ defimpl Distopy.Source, for: Distopy.Source.EnvFile do
 
   @spec add_pair(t, key :: binary, value :: binary) :: {:ok, t} | {:error, binary}
   def add_pair(t, key, value) do
-    raise "not implemented"
+    :ok = put_value(t, key, value)
+    {:ok, t}
   end
 
   @spec delete_key(t, key :: binary) :: {:ok, t} | {:error, binary}
@@ -86,5 +87,41 @@ defimpl Distopy.Source, for: Distopy.Source.EnvFile do
   @spec pair_to_iolist(t, key :: binary, value :: iolist) :: iolist
   def pair_to_iolist(_t, key, value) do
     [key, "=", value]
+  end
+
+  defp put_value(%{path: path} = t, key, value) do
+    nl? = ends_with_nl?(path)
+
+    f = File.open!(path, [:append])
+    if not nl?, do: IO.write(f, "\n")
+    IO.puts(f, pair_to_iolist(t, key, value))
+    :ok = File.close(f)
+  end
+
+  defp remove_value(t, locals, key) do
+    Enum.each(locals, fn file ->
+      contents =
+        file
+        |> File.stream!()
+        |> Enum.filter(
+          &if String.starts_with?(&1, "#{key}=") do
+            IO.puts(["removing #{key} from ", display_name(t)])
+            false
+          else
+            true
+          end
+        )
+        |> Enum.to_list()
+
+      Enum.into(contents, File.stream!(file))
+    end)
+  end
+
+  defp ends_with_nl?(file) do
+    file
+    |> File.stream!()
+    |> Enum.at(-1)
+    |> String.at(-1)
+    |> Kernel.==("\n")
   end
 end
