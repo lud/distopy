@@ -2,6 +2,9 @@ defprotocol Distopy.Source do
   @spec list_keys(t) :: [binary]
   def list_keys(t)
 
+  @spec has_key?(t, key :: binary) :: boolean
+  def has_key?(t, key)
+
   @spec source_group?(t) :: boolean
   def source_group?(t)
 
@@ -13,9 +16,6 @@ defprotocol Distopy.Source do
 
   @spec select_source(t, group_key :: term) :: t
   def select_source(t, source)
-
-  @spec group_key(t) :: term
-  def group_key(t)
 
   @spec display_name(t) :: iolist
   def display_name(t)

@@ -1,7 +1,7 @@
 defmodule Mix.Tasks.Env.Diff do
   use Mix.Task
   import Distopy.Shell
-  alias Distopy.Source.{EnvFile}
+  alias Distopy.Source.{EnvFile, SourceGroup}
 
   @version Distopy.MixProject.project() |> Keyword.fetch!(:version)
 
@@ -129,8 +129,17 @@ defmodule Mix.Tasks.Env.Diff do
   end
 
   defp build_sources(%{dist_files: dist, env_files: env} = _ctx) do
-    dist = case(length(dist), do: (1 -> EnvFile.new(hd(dist), color: :magenta)))
-    env = case(length(env), do: (1 -> EnvFile.new(hd(env), hide_values: true)))
+    dist =
+      case Enum.map(dist, &EnvFile.new(&1, color: :magenta)) do
+        [single] -> single
+        list -> list |> Enum.into(%{}, &{&1.path, &1}) |> SourceGroup.new(color: :magenta)
+      end
+
+    env =
+      case Enum.map(env, &EnvFile.new(&1, hide_values: true, color: :cyan)) do
+        [single] -> single
+        list -> list |> Enum.into(%{}, &{&1.path, &1}) |> SourceGroup.new(color: :magenta)
+      end
 
     %{dist_source: dist, env_source: env}
   end

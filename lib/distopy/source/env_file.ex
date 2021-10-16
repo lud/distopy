@@ -1,16 +1,17 @@
 defmodule Distopy.Source.EnvFile do
-  @enforce_keys [:path, :vars, :hide_values, :color]
+  @enforce_keys [:path, :vars, :hide_values]
   defstruct @enforce_keys
 
   def new(path, opts \\ []) do
     if File.regular?(path) do
       case Dotenvy.source([path], side_effect: false, vars: %{}) do
         {:ok, vars} ->
+          if Keyword.has_key?(opts, :color), do: raise("color deprecated")
+
           %__MODULE__{
             path: path,
             vars: vars,
-            hide_values: !!Keyword.get(opts, :hide_values),
-            color: Keyword.get(opts, :color, :cyan)
+            hide_values: !!Keyword.get(opts, :hide_values)
           }
 
         {:error, reason} ->
@@ -45,12 +46,9 @@ defimpl Distopy.Source, for: Distopy.Source.EnvFile do
   def select_source(_t, _source),
     do: invalid_group!()
 
-  @spec group_key(t) :: term
-  def group_key(t), do: t.path
-
   @spec display_name(t) :: iolist
-  def display_name(t),
-    do: [Distopy.Shell.colored(t.path, t.color)]
+  def display_name(%{path: path}),
+    do: path
 
   @spec get_value(t, key :: binary()) :: binary()
   def get_value(t, key) when is_map_key(t.vars, key),
