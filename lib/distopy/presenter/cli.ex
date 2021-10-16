@@ -137,16 +137,15 @@ defmodule Distopy.Presenter.CLI do
 
   def fixer_add_value(key, {missing_source, providing_source}) do
     value = get_value(providing_source, key)
-
-    case add_pair(missing_source, key, value) do
-      {:ok, missing_source} -> {:ok, {missing_source, providing_source}}
-      {:error, reason} -> abort(reason)
-    end
+    call_add_pair(missing_source, key, value, providing_source)
   end
 
   def fixer_enter_value(key, {missing_source, providing_source}) do
     value = prompt_value(key)
+    call_add_pair(missing_source, key, value, providing_source)
+  end
 
+  defp call_add_pair(missing_source, key, value, providing_source) do
     case add_pair(missing_source, key, value) do
       {:ok, missing_source} -> {:ok, {missing_source, providing_source}}
       {:error, reason} -> abort(reason)
