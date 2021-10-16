@@ -79,51 +79,16 @@ defmodule Distopy.Presenter.CLI do
     choice =
       build_choice([
         if updatable?(missing_source) do
-          {?a, "add above value to #{disp_miss}",
-           fn key, {missing_source, providing_source} = state ->
-             value = get_value(providing_source, key)
-
-             case add_pair(missing_source, key, value) do
-               {:ok, missing_source} -> {:ok, {missing_source, providing_source}}
-               {:error, reason} -> abort(reason)
-             end
-           end}
+          {?a, "add above value to #{disp_miss}", &fixer_add_value/2}
         end,
         if updatable?(missing_source) do
-          {?e, "enter value for #{disp_miss}",
-           fn key, {missing_source, providing_source} = state ->
-             value = prompt_value(key)
-
-             case add_pair(missing_source, key, value) do
-               {:ok, missing_source} -> {:ok, {missing_source, providing_source}}
-               {:error, reason} -> abort(reason)
-             end
-           end}
+          {?e, "enter value for #{disp_miss}", &fixer_enter_value/2}
         end,
         if updatable?(providing_source) do
-          {?d, "delete from #{disp_prov}",
-           fn key, {missing_source, providing_source} = state ->
-             case delete_key(providing_source, key) do
-               {:ok, providing_source} -> {:ok, {missing_source, providing_source}}
-               {:error, reason} -> abort(reason)
-             end
-           end}
+          {?d, "delete from #{disp_prov}", &fixer_remove_key/2}
         end,
         if source_group?(missing_source) do
-          {?c, "change target file from #{disp_miss}",
-           fn key, {missing_source, providing_source} = state ->
-             missing_source =
-               missing_source
-               |> list_sources()
-               |> Enum.with_index(?a)
-               |> Enum.map(fn {{sub_key, sub_display}, letter} ->
-                 {letter, sub_display, fn missing -> select_source(missing, sub_key) end}
-               end)
-               |> build_choice()
-               |> run_choice([missing_source])
-
-             {:retry, {missing_source, providing_source}}
-           end}
+          {?c, "change target file from #{disp_miss}", &fixer_change_source/2}
         end,
         {?s, "skip", fn _, _ -> {:ok, state} end},
         {?q, "quit", fn _, _ -> abort(0) end}
@@ -166,6 +131,47 @@ defmodule Distopy.Presenter.CLI do
       order: :lists.reverse(revorder),
       display: iolist |> :lists.reverse() |> Enum.intersperse(10)
     }
+  end
+
+  # fixers
+
+  def fixer_add_value(key, {missing_source, providing_source}) do
+    value = get_value(providing_source, key)
+
+    case add_pair(missing_source, key, value) do
+      {:ok, missing_source} -> {:ok, {missing_source, providing_source}}
+      {:error, reason} -> abort(reason)
+    end
+  end
+
+  def fixer_enter_value(key, {missing_source, providing_source}) do
+    value = prompt_value(key)
+
+    case add_pair(missing_source, key, value) do
+      {:ok, missing_source} -> {:ok, {missing_source, providing_source}}
+      {:error, reason} -> abort(reason)
+    end
+  end
+
+  def fixer_remove_key(key, {missing_source, providing_source}) do
+    case delete_key(providing_source, key) do
+      {:ok, providing_source} -> {:ok, {missing_source, providing_source}}
+      {:error, reason} -> abort(reason)
+    end
+  end
+
+  def fixer_change_source(_key, {missing_source, providing_source}) do
+    missing_source =
+      missing_source
+      |> list_sources()
+      |> Enum.with_index(?a)
+      |> Enum.map(fn {{sub_key, sub_display}, letter} ->
+        {letter, sub_display, fn missing -> select_source(missing, sub_key) end}
+      end)
+      |> build_choice()
+      |> run_choice([missing_source])
+
+    {:retry, {missing_source, providing_source}}
   end
 
   defp prompt_value(key) do

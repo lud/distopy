@@ -42,7 +42,7 @@ defimpl Distopy.Source, for: Distopy.Source.EnvFile do
     do: invalid_group!()
 
   @spec select_source(t, group_key :: term) :: t
-  def select_source(t, source),
+  def select_source(_t, _source),
     do: invalid_group!()
 
   @spec group_key(t) :: term
