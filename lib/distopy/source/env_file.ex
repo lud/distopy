@@ -32,6 +32,9 @@ defimpl Distopy.Source, for: Distopy.Source.EnvFile do
   @spec list_keys(t) :: [binary]
   def list_keys(t), do: Map.keys(t.vars)
 
+  @spec has_key?(t, key :: binary) :: boolean
+  def has_key?(t, key), do: Map.has_key?(t.vars, key)
+
   @spec source_group?(t) :: boolean
   def source_group?(_), do: false
 

@@ -7,9 +7,9 @@ defmodule Distopy.Presenter.CLI do
     # cli command can be piped to clipboard copy. stderr is slower than stdio so
     # we use a sleep()
     info([
-      display_name(env_source),
+      colored(display_name(env_source), :cyan),
       colored(" is missing one or more variables from ", :yellow),
-      display_name(dist_source),
+      colored(display_name(dist_source), :magenta),
       colored(":", :yellow)
     ])
 
@@ -55,16 +55,24 @@ defmodule Distopy.Presenter.CLI do
   end
 
   def fix_missing(keys, dist_source, env_source) when is_list(keys) do
-    Enum.reduce(keys, {_missing = env_source, _providing = dist_source}, &fix_undef/2)
+    Enum.reduce(keys, {_missing = env_source, _providing = dist_source}, fn key, sources ->
+      fix_undef(key, sources, {:cyan, :magenta})
+    end)
   end
 
   def fix_extra(keys, dist_source, env_source) when is_list(keys) do
-    Enum.reduce(keys, {_missing = dist_source, _providing = env_source}, &fix_undef/2)
+    Enum.reduce(keys, {_missing = dist_source, _providing = env_source}, fn key, sources ->
+      fix_undef(key, sources, {:magenta, :cyan})
+    end)
   end
 
-  defp fix_undef(key, {missing_source, providing_source} = state) do
-    disp_miss = display_name(missing_source)
-    disp_prov = display_name(providing_source)
+  defp fix_undef(
+         key,
+         {missing_source, providing_source} = state,
+         {missing_color, providing_color} = colors
+       ) do
+    disp_miss = colored(display_name(missing_source), missing_color)
+    disp_prov = colored(display_name(providing_source), providing_color)
 
     value_disp = display_value(providing_source, key)
     pair_display = pair_to_iolist(missing_source, key, value_disp)
@@ -96,7 +104,7 @@ defmodule Distopy.Presenter.CLI do
 
     case run_choice(choice, [key, state]) do
       {:ok, state} -> state
-      {:retry, state} -> fix_undef(key, state)
+      {:retry, state} -> fix_undef(key, state, colors)
       {:error, reason} -> abort(reason)
       other -> raise "invalid return value `#{inspect(other)}` from action"
     end

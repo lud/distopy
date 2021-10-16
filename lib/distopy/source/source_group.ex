@@ -40,7 +40,7 @@ defimpl Distopy.Source, for: Distopy.Source.SourceGroup do
   @spec display_name(t) :: iolist
   def display_name(%{sources: sources} = t) do
     n = map_size(sources) - 1
-    [with_selected(t, Source.display_name() / 1), " (+", Integer.to_charlist(n), ")"]
+    ["group [", with_selected(t, &Source.display_name/1), " (+", Integer.to_charlist(n), ")]"]
   end
 
   @spec get_value(t, key :: binary) :: binary
@@ -62,9 +62,10 @@ defimpl Distopy.Source, for: Distopy.Source.SourceGroup do
     if Source.has_key?(selected, key) do
       {selected, Source.get_value(selected, key)}
     else
-      Enum.find(sources, fn {_, sub} ->
-        Source.has_key(sub, key) && {sub, Source.get_value(sub, key)}
+      Enum.find_value(sources, fn {_, sub} ->
+        Source.has_key?(sub, key) && {sub, Source.get_value(sub, key)}
       end)
+      |> IO.inspect(label: ~S[found])
     end
   end
 

@@ -130,15 +130,15 @@ defmodule Mix.Tasks.Env.Diff do
 
   defp build_sources(%{dist_files: dist, env_files: env} = _ctx) do
     dist =
-      case Enum.map(dist, &EnvFile.new(&1, color: :magenta)) do
+      case Enum.map(dist, &EnvFile.new(&1)) do
         [single] -> single
-        list -> list |> Enum.into(%{}, &{&1.path, &1}) |> SourceGroup.new(color: :magenta)
+        list -> list |> Enum.into(%{}, &{&1.path, &1}) |> SourceGroup.new()
       end
 
     env =
-      case Enum.map(env, &EnvFile.new(&1, hide_values: true, color: :cyan)) do
+      case Enum.map(env, &EnvFile.new(&1, hide_values: true)) do
         [single] -> single
-        list -> list |> Enum.into(%{}, &{&1.path, &1}) |> SourceGroup.new(color: :magenta)
+        list -> list |> Enum.into(%{}, &{&1.path, &1}) |> SourceGroup.new()
       end
 
     %{dist_source: dist, env_source: env}
