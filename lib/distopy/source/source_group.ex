@@ -18,10 +18,15 @@ defimpl Distopy.Source, for: Distopy.Source.SourceGroup do
   @type t :: %SourceGroup{}
 
   @spec list_keys(t) :: [binary]
-  def list_keys(t) do
-    t
-    |> flat_map(&Source.list_keys/1)
+  def list_keys(%{sources: sources}) do
+    sources
+    |> Enum.flat_map(vmapper(&Source.list_keys/1))
     |> Enum.uniq()
+  end
+
+  @spec has_key?(t, key :: binary) :: boolean
+  def has_key?(%{sources: sources}, key) do
+    Enum.any?(sources, fn {_, sub} -> Source.has_key?(sub, key) end)
   end
 
   @spec source_group?(t) :: boolean
@@ -31,7 +36,8 @@ defimpl Distopy.Source, for: Distopy.Source.SourceGroup do
   def updatable?(t), do: with_selected(t, &Source.updatable?/1)
 
   @spec list_sources(t) :: [{group_key :: term, display_name :: iolist}]
-  def list_sources(t), do: fmap(t, &Source.display_name/1)
+  def list_sources(%{sources: sources}),
+    do: Enum.map(sources, pkmapper(&Source.display_name/1))
 
   @spec select_source(t, group_key :: term) :: t
   def select_source(%{sources: sources} = t, key) when is_map_key(sources, key),
@@ -65,7 +71,6 @@ defimpl Distopy.Source, for: Distopy.Source.SourceGroup do
       Enum.find_value(sources, fn {_, sub} ->
         Source.has_key?(sub, key) && {sub, Source.get_value(sub, key)}
       end)
-      |> IO.inspect(label: ~S[found])
     end
   end
 
@@ -95,17 +100,11 @@ defimpl Distopy.Source, for: Distopy.Source.SourceGroup do
     with_selected(t, &Source.pair_to_iolist(&1, key, value))
   end
 
-  # pass each source to the callback, return with keys
-  defp fmap(%{sources: sources}, f) when is_function(f, 1),
-    do: Enum.map(sources, fn {key, sub} -> {key, f.(sub)} end)
+  # enum values mapper
+  defp vmapper(f) when is_function(f, 1), do: fn {_, v} -> f.(v) end
 
-  # pass each source to the callback, flattens the result
-  defp flat_map(%{sources: sources}, f) when is_function(f, 1),
-    do: Enum.flat_map(sources, fn {_, sub} -> f.(sub) end)
-
-  # pass each {key, source} to the callback
-  defp map_sources(%{sources: sources}, f) when is_function(f, 1),
-    do: Enum.map(sources, f)
+  # preserve enum keys mapper
+  defp pkmapper(f) when is_function(f, 1), do: fn {k, v} -> {k, f.(v)} end
 
   defp with_selected(%{sources: sources, selected: sel}, f),
     do: sources |> Map.fetch!(sel) |> then(f)

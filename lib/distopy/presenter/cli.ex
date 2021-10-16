@@ -30,9 +30,9 @@ defmodule Distopy.Presenter.CLI do
   def print_extra(keys, dist_source, env_source) do
     # here we do the opposite of print_missing/3.
     info([
-      display_name(env_source),
+      colored(display_name(env_source), :cyan),
       colored(" has variables not defined in ", :yellow),
-      display_name(dist_source),
+      colored(display_name(dist_source), :magenta),
       colored(":", :yellow)
     ])
 
