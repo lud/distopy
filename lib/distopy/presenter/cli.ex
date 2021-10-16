@@ -55,7 +55,11 @@ defmodule Distopy.Presenter.CLI do
   end
 
   def fix_missing(keys, dist_source, env_source) when is_list(keys) do
-    Enum.reduce(keys, {env_source, dist_source}, &fix_undef/2)
+    Enum.reduce(keys, {_missing = env_source, _providing = dist_source}, &fix_undef/2)
+  end
+
+  def fix_extra(keys, dist_source, env_source) when is_list(keys) do
+    Enum.reduce(keys, {_missing = dist_source, _providing = env_source}, &fix_undef/2)
   end
 
   defp fix_undef(key, {missing_source, providing_source} = state) do
@@ -124,8 +128,6 @@ defmodule Distopy.Presenter.CLI do
         {?s, "skip", fn _, _ -> {:ok, state} end},
         {?q, "quit", fn _, _ -> abort(0) end}
       ])
-
-    choice |> IO.inspect(label: ~S[choice])
 
     case run_choice(choice, [key, state]) do
       {:ok, state} -> state

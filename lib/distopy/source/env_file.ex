@@ -69,12 +69,13 @@ defimpl Distopy.Source, for: Distopy.Source.EnvFile do
   @spec add_pair(t, key :: binary, value :: binary) :: {:ok, t} | {:error, binary}
   def add_pair(t, key, value) do
     :ok = put_value(t, key, value)
-    {:ok, t}
+    {:ok, update_in(t.vars, &Map.put(&1, key, value))}
   end
 
   @spec delete_key(t, key :: binary) :: {:ok, t} | {:error, binary}
   def delete_key(t, key) do
-    raise "not implemented"
+    :ok = remove_key(t, key)
+    {:ok, update_in(t.vars, &Map.delete(&1, key))}
   end
 
   @spec pairs_to_iolist(t, [{key :: binary, value :: iolist}]) :: iolist
@@ -98,23 +99,20 @@ defimpl Distopy.Source, for: Distopy.Source.EnvFile do
     :ok = File.close(f)
   end
 
-  defp remove_value(t, locals, key) do
-    Enum.each(locals, fn file ->
-      contents =
-        file
-        |> File.stream!()
-        |> Enum.filter(
-          &if String.starts_with?(&1, "#{key}=") do
-            IO.puts(["removing #{key} from ", display_name(t)])
-            false
-          else
-            true
-          end
-        )
-        |> Enum.to_list()
+  defp remove_key(%{path: path} = t, key) do
+    path
+    |> File.stream!()
+    |> Enum.filter(
+      &if String.starts_with?(&1, "#{key}=") do
+        IO.puts(["removing #{key} from ", display_name(t)])
+        false
+      else
+        true
+      end
+    )
+    |> Enum.into(File.stream!(path))
 
-      Enum.into(contents, File.stream!(file))
-    end)
+    :ok
   end
 
   defp ends_with_nl?(file) do

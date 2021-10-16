@@ -100,21 +100,19 @@ defmodule Mix.Tasks.Env.Diff do
     |> IO.puts()
   end
 
-  defp do_run(ctx) do
-    ctx |> IO.inspect(label: ~S[ctx])
-    do_run(ctx, true)
-  end
+  defp do_run(ctx),
+    do: do_run(ctx, true)
 
   defp do_run(%{fix: fix?} = ctx, show_fix_opt?) do
     sources = build_sources(ctx)
     diff = diff(sources)
 
-    case run_differ(ctx, sources, diff) do
+    case Distopy.display_diff(sources, diff) do
       :ok ->
         :ok
 
       :error when fix? ->
-        run_fixer(ctx, sources, diff)
+        Distopy.run_fixer(sources, diff)
         info("Fixer finished, checking new values")
         do_run(%{ctx | fix: false}, false)
 
@@ -140,32 +138,5 @@ defmodule Mix.Tasks.Env.Diff do
 
   defp diff(%{dist_source: dist, env_source: env}) do
     %{missing: missing, extra: extra} = Distopy.diff_keys(dist, env)
-  end
-
-  defp run_differ(
-         ctx,
-         %{dist_source: dist, env_source: env} = sources,
-         %{missing: missing, extra: extra} = diff
-       ) do
-    valid? = length(missing) == 0 and length(extra) == 0
-
-    if length(missing) > 0, do: CLI.print_missing(missing, dist, env)
-    if length(extra) > 0, do: CLI.print_extra(extra, dist, env)
-
-    if valid? do
-      CLI.print_sync_ok(dist, env)
-      :ok
-    else
-      :error
-    end
-  end
-
-  defp run_fixer(
-         ctx,
-         %{dist_source: dist, env_source: env} = sources,
-         %{missing: missing, extra: extra} = diff
-       ) do
-    if length(missing) > 0, do: CLI.fix_missing(missing, dist, env)
-    # if length(extra) > 0, do: CLI.fix_extra(extra, dist, env)
   end
 end
