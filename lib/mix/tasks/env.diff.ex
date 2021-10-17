@@ -52,12 +52,7 @@ defmodule Mix.Tasks.Env.Diff do
     do: fine_opts
 
   defp add_file(acc, key, file) do
-    if File.regular?(file) do
-      Map.update!(acc, key, &(&1 ++ [file]))
-    else
-      warn("file #{file} not found")
-      acc
-    end
+    Map.update!(acc, key, &(&1 ++ [file]))
   end
 
   defp print_invalid_argv({_, [], invalid}) do

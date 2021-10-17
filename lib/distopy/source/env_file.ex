@@ -31,7 +31,7 @@ end
 
 defimpl Distopy.Source, for: Distopy.Source.EnvFile do
   alias Distopy.Source.EnvFile
-  import Distopy.Source.Helpers
+  use Distopy.Source.BaseFile
 
   @type t :: EnvFile.t()
 
@@ -41,29 +41,8 @@ defimpl Distopy.Source, for: Distopy.Source.EnvFile do
   @spec has_key?(t, key :: binary) :: boolean
   def has_key?(t, key), do: Map.has_key?(t.vars, key)
 
-  @spec source_group?(t) :: boolean
-  def source_group?(_), do: false
-
   @spec updatable?(t) :: boolean
   def updatable?(_), do: true
-
-  @spec list_sources(t) :: [{group_key :: term, display_name :: iodata}]
-  def list_sources(_),
-    do: invalid_group!()
-
-  @spec select_source(t, group_key :: term) :: t
-  def select_source(_t, _source),
-    do: invalid_group!()
-
-  @spec selected?(t, group_key :: term) :: boolean
-  def selected?(_t, _group_key),
-    do: invalid_group!()
-
-  @spec get_sub_with_key(t, key :: binary) :: {group_key :: term, sub_source :: term}
-  def get_sub_with_key(_t, _key), do: invalid_group!()
-
-  @spec put_sub(t, group_key :: term, sub_source :: term) :: t
-  def put_sub(_t, _group_key, _sub_source), do: invalid_group!()
 
   @spec display_name(t) :: iodata
   def display_name(%{path: path}),

@@ -122,11 +122,21 @@ defprotocol Distopy.Source do
 end
 
 defmodule Distopy.Source.Helpers do
-  defmacro invalid_group!() do
+  defmacro invalid_group!(t) do
     quote do
       {f, a} = __ENV__.function
+      %s{} = unquote(t)
 
-      raise "cannot use %#{inspect(__MODULE__)}{} as a sources group, attempted to call Distopy.Source.#{Atom.to_string(f)}/#{a}"
+      raise "cannot use %#{inspect(s)}{} as a sources group, attempted to call Distopy.Source.#{Atom.to_string(f)}/#{a}"
+    end
+  end
+
+  defmacro not_updatable!(t) do
+    quote do
+      {f, a} = __ENV__.function
+      %s{} = unquote(t)
+
+      raise "cannot use %#{inspect(s)}{} as an updatable source, attempted to call Distopy.Source.#{Atom.to_string(f)}/#{a}"
     end
   end
 
@@ -142,6 +152,39 @@ defmodule Distopy.Source.Helpers do
         ])
 
       raise ArgumentError, message: errmsg
+    end
+  end
+end
+
+defmodule Distopy.Source.BaseFile do
+  @moduledoc """
+  This modules provides the default implementation of the `Distopy.Source`
+  protocol of group fonctions for non-group sources, just raising exceptions.
+  """
+  defmacro __using__(_) do
+    quote do
+      import Distopy.Source.Helpers
+
+      @spec source_group?(term) :: boolean
+      def source_group?(_), do: false
+
+      @spec list_sources(term) :: [{group_key :: term, display_name :: iodata}]
+      def list_sources(t),
+        do: invalid_group!(t)
+
+      @spec select_source(term, group_key :: term) :: term
+      def select_source(t, _source),
+        do: invalid_group!(t)
+
+      @spec selected?(term, group_key :: term) :: boolean
+      def selected?(t, _group_key),
+        do: invalid_group!(t)
+
+      @spec get_sub_with_key(term, key :: binary) :: {group_key :: term, sub_source :: term}
+      def get_sub_with_key(t, _key), do: invalid_group!(t)
+
+      @spec put_sub(term, group_key :: term, sub_source :: term) :: term
+      def put_sub(t, _group_key, _sub_source), do: invalid_group!(t)
     end
   end
 end
