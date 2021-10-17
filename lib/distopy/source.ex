@@ -17,6 +17,15 @@ defprotocol Distopy.Source do
   @spec select_source(t, group_key :: term) :: t
   def select_source(t, source)
 
+  @doc """
+  Returns wether the currently selected sub-source in group is the given
+  `group_key`. The group key is the one returned from `get_sub_with_key/2` or
+  `list_source/1`.
+  """
+  @doc group: true
+  @spec selected?(t, group_key :: term) :: boolean
+  def selected?(t, source)
+
   @spec display_name(t) :: iolist
   def display_name(t)
 
@@ -37,7 +46,7 @@ defprotocol Distopy.Source do
 
   @doc """
   Replaces the sub-source uniquely identified by `group_key`. The given group
-  key is the one returned from `get_sub_with_key/2`.
+  key is the one returned from `get_sub_with_key/2` or `list_source/1`.
   """
   @doc group: true
   @spec put_sub(t, group_key :: term, sub_source :: term) :: t

@@ -49,6 +49,10 @@ defimpl Distopy.Source, for: Distopy.Source.EnvFile do
   def select_source(_t, _source),
     do: invalid_group!()
 
+  @spec selected?(t, group_key :: term) :: boolean
+  def selected?(_t, _group_key),
+    do: invalid_group!()
+
   @spec get_sub_with_key(t, key :: binary) :: {group_key :: term, sub_source :: term}
   def get_sub_with_key(_t, _key), do: invalid_group!()
 

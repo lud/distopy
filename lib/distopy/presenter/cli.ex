@@ -47,9 +47,9 @@ defmodule Distopy.Presenter.CLI do
   end
 
   def print_sync_ok(dist_source, env_source) do
-    info([
+    success([
       display_name(env_source),
-      colored(" is in sync with ", :green),
+      " is in sync with ",
       display_name(dist_source)
     ])
   end
@@ -92,11 +92,14 @@ defmodule Distopy.Presenter.CLI do
         if updatable?(missing_source) do
           {?e, "enter value for #{disp_miss}", &fixer_enter_value/2}
         end,
+        if source_group?(missing_source) do
+          {?c, "change target in #{disp_miss}", &fixer_change_missing_sub/2}
+        end,
         if updatable?(providing_source) do
           {?d, "delete from #{disp_prov}", &fixer_remove_key(&1, &2, providing_color)}
         end,
-        if source_group?(missing_source) do
-          {?c, "change target file from #{disp_miss}", &fixer_change_source/2}
+        if source_group?(providing_source) do
+          {?g, "change source in #{disp_prov}", &fixer_change_provider_sub/2}
         end,
         {?s, "skip", fn _, _ -> {:ok, state} end},
         {?q, "quit", fn _, _ -> abort(0) end}
@@ -110,15 +113,15 @@ defmodule Distopy.Presenter.CLI do
     end
   end
 
-  defp run_choice(%{actions: actions, display: display} = choice, args) do
+  defp run_choice(%{actions: actions, display: display} = choice, action_args) do
     case IO.gets([display, ?\n, "> "]) |> String.trim() do
       <<letter>> when is_map_key(actions, letter) ->
         action = Map.fetch!(actions, letter)
-        apply(action, args)
+        apply(action, action_args)
 
       _ ->
         warn("Eh?")
-        run_choice(choice, args)
+        run_choice(choice, action_args)
     end
   end
 
@@ -143,12 +146,12 @@ defmodule Distopy.Presenter.CLI do
 
   # fixers
 
-  def fixer_add_value(key, {missing_source, providing_source}) do
+  defp fixer_add_value(key, {missing_source, providing_source}) do
     value = get_value(providing_source, key)
     call_add_pair(missing_source, key, value, providing_source)
   end
 
-  def fixer_enter_value(key, {missing_source, providing_source}) do
+  defp fixer_enter_value(key, {missing_source, providing_source}) do
     value = prompt_value(key)
     call_add_pair(missing_source, key, value, providing_source)
   end
@@ -160,7 +163,7 @@ defmodule Distopy.Presenter.CLI do
     end
   end
 
-  def fixer_remove_key(key, {missing_source, providing_source}, color) do
+  defp fixer_remove_key(key, {missing_source, providing_source}, color) do
     case delete_recursively(providing_source, key, color) do
       {:ok, providing_source} -> {:ok, {missing_source, providing_source}}
       {:error, reason} -> abort(reason)
@@ -200,18 +203,27 @@ defmodule Distopy.Presenter.CLI do
     end
   end
 
-  def fixer_change_source(_key, {missing_source, providing_source}) do
-    missing_source =
-      missing_source
-      |> list_sources()
-      |> Enum.with_index(?a)
-      |> Enum.map(fn {{sub_key, sub_display}, letter} ->
-        {letter, sub_display, fn missing -> select_source(missing, sub_key) end}
-      end)
-      |> build_choice()
-      |> run_choice([missing_source])
+  defp fixer_change_missing_sub(_key, {missing_source, providing_source}) do
+    {:retry, {change_source(missing_source), providing_source}}
+  end
 
-    {:retry, {missing_source, providing_source}}
+  defp fixer_change_provider_sub(_key, {missing_source, providing_source}) do
+    {:retry, {missing_source, change_source(providing_source)}}
+  end
+
+  defp change_source(group) do
+    group
+    |> list_sources()
+    |> Enum.with_index(?a)
+    |> Enum.map(fn {{group_key, sub_display}, letter} ->
+      {
+        letter,
+        [if(selected?(group, group_key), do: "* ", else: "  "), sub_display],
+        fn group -> select_source(group, group_key) end
+      }
+    end)
+    |> build_choice()
+    |> run_choice([group])
   end
 
   defp prompt_value(key) do

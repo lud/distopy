@@ -112,7 +112,7 @@ defmodule Mix.Tasks.Env.Diff do
 
       :error when fix? ->
         Distopy.run_fixer(sources, diff)
-        info("Fixer finished, checking new values")
+        info("Fixer finished, checking new values...\n")
         do_run(%{ctx | fix: false}, false)
 
       :error when show_fix_opt? ->

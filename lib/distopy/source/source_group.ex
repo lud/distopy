@@ -43,6 +43,10 @@ defimpl Distopy.Source, for: Distopy.Source.SourceGroup do
   def select_source(%{sources: sources} = t, key) when is_map_key(sources, key),
     do: %SourceGroup{t | selected: key}
 
+  @spec selected?(t, group_key :: term) :: boolean
+  def selected?(%{selected: sel}, group_key),
+    do: sel == group_key
+
   @spec display_name(t) :: iolist
   def display_name(%{sources: sources} = t) do
     n = map_size(sources) - 1
