@@ -5,7 +5,13 @@ defmodule Mix.Tasks.Env.Diff do
 
   @version Distopy.MixProject.project() |> Keyword.fetch!(:version)
 
-  @args_schema [dist: [:string, :keep], file: [:string, :keep], fix: :boolean]
+  @args_schema [
+    dist: [:string, :keep],
+    file: [:string, :keep],
+    fix: :boolean,
+    extra: :boolean,
+    missing: :boolean
+  ]
 
   @impl true
   def run(argv) do
@@ -17,7 +23,9 @@ defmodule Mix.Tasks.Env.Diff do
   end
 
   defp parse_args(argv) do
-    case OptionParser.parse(argv, strict: @args_schema) do
+    parsed = OptionParser.parse(argv, strict: @args_schema)
+
+    case parsed do
       {opts, [], []} ->
         opts
         |> collect_opts()
@@ -33,11 +41,13 @@ defmodule Mix.Tasks.Env.Diff do
   defp collect_opts(optslist) do
     optslist
     |> Enum.reduce(
-      %{env_files: [], dist_files: [], fix: false},
+      %{env_files: [], dist_files: [], fix: false, extra: true, missing: true},
       fn
         {:file, file}, acc -> add_file(acc, :env_files, file)
         {:dist, file}, acc -> add_file(acc, :dist_files, file)
         {:fix, v}, acc when is_boolean(v) -> Map.put(acc, :fix, v)
+        {:extra, v}, acc when is_boolean(v) -> Map.put(acc, :extra, v)
+        {:missing, v}, acc when is_boolean(v) -> Map.put(acc, :missing, v)
       end
     )
   end
@@ -47,6 +57,9 @@ defmodule Mix.Tasks.Env.Diff do
 
   defp check_opts(%{dist_files: dist}) when length(dist) < 1,
     do: abort("no dist file provided")
+
+  defp check_opts(%{extra: false, missing: false}),
+    do: abort("both --no-missing and --no-extra were provided")
 
   defp check_opts(fine_opts),
     do: fine_opts
@@ -88,9 +101,11 @@ defmodule Mix.Tasks.Env.Diff do
     mix env.diff --dist .env.dist --file .env --file .env.test
 
     Options
-    #{to_string(colored("--dist", :bright))}      Add a dist file
-    #{to_string(colored("--file", :bright))}      Add an env file to check
-    #{to_string(colored("--fix", :bright))}       Run the interactive fixer to sync files
+    #{usage_opt("--dist")} Add a dist file
+    #{usage_opt("--file")} Add an env file to check
+    #{usage_opt("--fix")} Run the interactive fixer to sync files
+    #{usage_opt("--no-extra")} Ignore extra variables in env files
+    #{usage_opt("--no-missing")} Ignore extra variables in dist files
 
     Note that the fixer will not do any modification to your files until you
     choose to do so.
@@ -98,13 +113,17 @@ defmodule Mix.Tasks.Env.Diff do
     |> IO.puts()
   end
 
-  defp do_run(%{fix: fix?} = ctx, impls) do
+  defp usage_opt(text) do
+    colored(String.pad_trailing(text, 20), :bright)
+  end
+
+  defp do_run(%{fix: fix?, extra: extra, missing: missing} = ctx, impls) do
     {dist, env} = build_sources(ctx, impls)
 
     if fix? do
-      Distopy.diff_and_fix(dist, env)
+      Distopy.diff_and_fix(dist, env, extra: extra, missing: missing)
     else
-      Distopy.diff_and_output(dist, env)
+      Distopy.diff_and_output(dist, env, extra: extra, missing: missing)
     end
     |> case do
       :ok -> :ok

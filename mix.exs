@@ -6,7 +6,7 @@ defmodule Distopy.MixProject do
       app: :distopy,
       consolidate_protocols: false,
       package: package(),
-      version: "0.1.4",
+      version: "0.2.0",
       elixir: "~> 1.12",
       start_permanent: false,
       deps: deps(),
