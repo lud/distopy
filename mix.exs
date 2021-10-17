@@ -4,12 +4,21 @@ defmodule Distopy.MixProject do
   def project do
     [
       app: :distopy,
+      package: package(),
       version: "0.1.0",
       elixir: "~> 1.12",
       start_permanent: false,
       deps: deps(),
       docs: docs(),
       source_url: "https://github.com/lud/distopy"
+    ]
+  end
+
+  def package do
+    [
+      links: %{"Github" => "https://github.com/lud/distopy"},
+      description: "A command line tool to diff and fix .env files.",
+      licenses: ["MIT"]
     ]
   end
 
