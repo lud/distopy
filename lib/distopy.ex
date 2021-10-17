@@ -14,7 +14,7 @@ defmodule Distopy do
     missing = dist_keys -- env_keys
     extra = env_keys -- dist_keys
 
-    %{missing: missing, extra: extra}
+    %{missing: Enum.sort(missing), extra: Enum.sort(extra)}
   end
 
   def diff_and_output(dist, env, opts \\ []) do
