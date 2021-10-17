@@ -121,7 +121,4 @@ defimpl Distopy.Source, for: Distopy.Source.SourceGroup do
   defp replace_selected(%{sources: sources, selected: sel} = t, new_sub) do
     %SourceGroup{t | sources: Map.put(sources, sel, new_sub)}
   end
-
-  defp selected(%{sources: sources, selected: sel}),
-    do: Map.fetch!(sources, sel)
 end

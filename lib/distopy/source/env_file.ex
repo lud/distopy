@@ -110,7 +110,7 @@ defimpl Distopy.Source, for: Distopy.Source.EnvFile do
     :ok = File.close(f)
   end
 
-  defp remove_key(%{path: path} = t, key) do
+  defp remove_key(%{path: path}, key) do
     path
     |> File.stream!()
     |> Enum.filter(
