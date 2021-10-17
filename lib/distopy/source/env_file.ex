@@ -49,6 +49,12 @@ defimpl Distopy.Source, for: Distopy.Source.EnvFile do
   def select_source(_t, _source),
     do: invalid_group!()
 
+  @spec get_sub_with_key(t, key :: binary) :: {group_key :: term, sub_source :: term}
+  def get_sub_with_key(_t, _key), do: invalid_group!()
+
+  @spec put_sub(t, group_key :: term, sub_source :: term) :: t
+  def put_sub(_t, _group_key, _sub_source), do: invalid_group!()
+
   @spec display_name(t) :: iolist
   def display_name(%{path: path}),
     do: path
@@ -105,7 +111,6 @@ defimpl Distopy.Source, for: Distopy.Source.EnvFile do
     |> File.stream!()
     |> Enum.filter(
       &if String.starts_with?(&1, "#{key}=") do
-        IO.puts(["removing #{key} from ", display_name(t)])
         false
       else
         true

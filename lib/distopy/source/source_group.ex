@@ -51,27 +51,32 @@ defimpl Distopy.Source, for: Distopy.Source.SourceGroup do
 
   @spec get_value(t, key :: binary) :: binary
   def get_value(t, key) do
-    {_, val} = get_sub_with_value(t, key)
-    val
+    {_, sub} = get_sub_with_key(t, key)
+    Source.get_value(sub, key)
   end
 
   @spec display_value(t, key :: binary) :: iolist
   def display_value(t, key) do
-    {sub, _} = get_sub_with_value(t, key)
+    {_, sub} = get_sub_with_key(t, key)
     Source.display_value(sub, key)
   end
 
-  defp get_sub_with_value(%{sources: sources} = t, key) do
-    # if the value is in multiple sub sources prefer the selected one.
-    selected = selected(t)
+  @spec get_sub_with_key(t, key :: binary) :: {group_key :: term, sub_source :: term}
+  def get_sub_with_key(%{sources: sources, selected: sel}, key) do
+    # if the key is defined in multiple sub sources, prefer the selected one.
+    selected = Map.fetch!(sources, sel)
 
     if Source.has_key?(selected, key) do
-      {selected, Source.get_value(selected, key)}
+      {sel, selected}
     else
-      Enum.find_value(sources, fn {_, sub} ->
-        Source.has_key?(sub, key) && {sub, Source.get_value(sub, key)}
-      end)
+      Enum.find(sources, fn {_, sub} -> Source.has_key?(sub, key) end)
     end
+  end
+
+  @spec put_sub(t, group_key :: term, sub_source :: term) :: t
+  def put_sub(%{sources: sources} = t, group_key, sub_source)
+      when is_map_key(sources, group_key) do
+    %SourceGroup{t | sources: Map.put(sources, group_key, sub_source)}
   end
 
   @spec add_pair(t, key :: binary, value :: binary) :: {:ok, t} | {:error, binary}
@@ -114,5 +119,5 @@ defimpl Distopy.Source, for: Distopy.Source.SourceGroup do
   end
 
   defp selected(%{sources: sources, selected: sel}),
-    do: sources |> Map.fetch!(sel)
+    do: Map.fetch!(sources, sel)
 end

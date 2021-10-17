@@ -23,6 +23,26 @@ defprotocol Distopy.Source do
   @spec get_value(t, key :: binary) :: binary
   def get_value(t, key)
 
+  @doc """
+  Returns the sub-source that defines the key `key`. The function must return
+  a tuple with `group_key` as an unique identifier of the sub-source in the
+  group, and the sub-source itself.
+
+  Do not mistake `key` for `group_key`. The former indetifies an environment
+  variable name while the latter identifies a sub-source in a group.
+  """
+  @doc group: true
+  @spec get_sub_with_key(t, key :: binary) :: {group_key :: term, sub_source :: term}
+  def get_sub_with_key(t, key)
+
+  @doc """
+  Replaces the sub-source uniquely identified by `group_key`. The given group
+  key is the one returned from `get_sub_with_key/2`.
+  """
+  @doc group: true
+  @spec put_sub(t, group_key :: term, sub_source :: term) :: t
+  def put_sub(t, group_key, sub_source)
+
   @spec display_value(t, key :: binary) :: iolist
   def display_value(t, key)
 

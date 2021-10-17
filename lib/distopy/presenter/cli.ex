@@ -93,7 +93,7 @@ defmodule Distopy.Presenter.CLI do
           {?e, "enter value for #{disp_miss}", &fixer_enter_value/2}
         end,
         if updatable?(providing_source) do
-          {?d, "delete from #{disp_prov}", &fixer_remove_key/2}
+          {?d, "delete from #{disp_prov}", &fixer_remove_key(&1, &2, providing_color)}
         end,
         if source_group?(missing_source) do
           {?c, "change target file from #{disp_miss}", &fixer_change_source/2}
@@ -160,10 +160,43 @@ defmodule Distopy.Presenter.CLI do
     end
   end
 
-  def fixer_remove_key(key, {missing_source, providing_source}) do
-    case delete_key(providing_source, key) do
+  def fixer_remove_key(key, {missing_source, providing_source}, color) do
+    case delete_recursively(providing_source, key, color) do
       {:ok, providing_source} -> {:ok, {missing_source, providing_source}}
       {:error, reason} -> abort(reason)
+    end
+  end
+
+  defp delete_recursively(providing_source, key, color) do
+    # If the source is a group, it could have the key defined multiple times. So
+    # we will loop on it until it has fully removed all definitions.  So we must
+    # check if it still has the key.
+    cond do
+      not has_key?(providing_source, key) ->
+        {:ok, providing_source}
+
+      source_group?(providing_source) ->
+        {group_key, sub} = get_sub_with_key(providing_source, key)
+
+        case delete_recursively(sub, key, color) do
+          {:ok, sub} ->
+            providing_source
+            |> put_sub(group_key, sub)
+            |> delete_recursively(key, color)
+
+          {:error, _} = err ->
+            err
+        end
+
+      true ->
+        case delete_key(providing_source, key) do
+          {:ok, source} ->
+            info(["deleted ", key, " from ", colored(display_name(source), color)])
+            {:ok, source}
+
+          {:error, _} = err ->
+            err
+        end
     end
   end
 
