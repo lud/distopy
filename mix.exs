@@ -29,6 +29,7 @@ defmodule Distopy.MixProject do
 
   defp docs do
     [
+      main: Distopy,
       source_ref: "main",
       formatters: ["html"],
       nest_modules_by_prefix: [],

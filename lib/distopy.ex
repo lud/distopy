@@ -2,6 +2,12 @@ defmodule Distopy do
   alias Distopy.Source
   alias Distopy.Presenter.CLI
 
+  @moduledoc """
+  The main API for Distopy.
+
+  #{"README.md" |> File.read!() |> String.split("<!-- mix_docs -->") |> Enum.at(1)}
+  """
+
   def diff_keys(dist_source, env_source) do
     dist_keys = Source.list_keys(dist_source)
     env_keys = Source.list_keys(env_source)

@@ -9,7 +9,11 @@ defmodule Mix.Tasks.Env.Diff do
 
   @impl true
   def run(argv) do
-    argv |> parse_args() |> do_run()
+    run(argv, [])
+  end
+
+  def run(argv, impls) do
+    argv |> parse_args() |> do_run(impls)
   end
 
   defp parse_args(argv) do
@@ -99,8 +103,8 @@ defmodule Mix.Tasks.Env.Diff do
     |> IO.puts()
   end
 
-  defp do_run(%{fix: fix?} = ctx) do
-    %{dist_source: dist, env_source: env} = build_sources(ctx)
+  defp do_run(%{fix: fix?} = ctx, impls) do
+    {dist, env} = build_sources(ctx, impls)
 
     if fix? do
       Distopy.diff_and_fix(dist, env)
@@ -113,19 +117,38 @@ defmodule Mix.Tasks.Env.Diff do
     end
   end
 
-  defp build_sources(%{dist_files: dist, env_files: env} = _ctx) do
+  defp build_sources(%{dist_files: dist_files, env_files: env_files} = _ctx, impls) do
     dist =
-      case Enum.map(dist, &EnvFile.new(&1)) do
+      case Enum.map(dist_files, &EnvFile.new(&1)) do
         [single] -> single
         list -> list |> Enum.into(%{}, &{&1.path, &1}) |> SourceGroup.new()
       end
 
     env =
-      case Enum.map(env, &EnvFile.new(&1, hide_values: true)) do
+      case Enum.map(env_files, &build_env_source(&1, impls)) do
         [single] -> single
         list -> list |> Enum.into(%{}, &{&1.path, &1}) |> SourceGroup.new()
       end
 
-    %{dist_source: dist, env_source: env}
+    {dist, env}
+  end
+
+  defp build_env_source(path, impls) when is_binary(path) do
+    builder =
+      Enum.find(impls, fn {matcher, _} ->
+        cond do
+          Regex.regex?(matcher) -> Regex.match?(matcher, path)
+          is_function(matcher, 1) -> matcher.(path)
+          true -> false
+        end
+      end)
+
+    case builder do
+      {_, build} ->
+        build.(path)
+
+      nil ->
+        EnvFile.new(path, hide_values: true)
+    end
   end
 end
