@@ -35,7 +35,7 @@ defimpl Distopy.Source, for: Distopy.Source.SourceGroup do
   @spec updatable?(t) :: boolean
   def updatable?(t), do: with_selected(t, &Source.updatable?/1)
 
-  @spec list_sources(t) :: [{group_key :: term, display_name :: iolist}]
+  @spec list_sources(t) :: [{group_key :: term, display_name :: iodata}]
   def list_sources(%{sources: sources}),
     do: Enum.map(sources, pkmapper(&Source.display_name/1))
 
@@ -47,7 +47,7 @@ defimpl Distopy.Source, for: Distopy.Source.SourceGroup do
   def selected?(%{selected: sel}, group_key),
     do: sel == group_key
 
-  @spec display_name(t) :: iolist
+  @spec display_name(t) :: iodata
   def display_name(%{sources: sources} = t) do
     n = map_size(sources) - 1
     ["group [", with_selected(t, &Source.display_name/1), " (+", Integer.to_charlist(n), ")]"]
@@ -59,7 +59,7 @@ defimpl Distopy.Source, for: Distopy.Source.SourceGroup do
     Source.get_value(sub, key)
   end
 
-  @spec display_value(t, key :: binary) :: iolist
+  @spec display_value(t, key :: binary) :: iodata
   def display_value(t, key) do
     {_, sub} = get_sub_with_key(t, key)
     Source.display_value(sub, key)
@@ -99,14 +99,14 @@ defimpl Distopy.Source, for: Distopy.Source.SourceGroup do
     end
   end
 
-  @spec pairs_to_iolist(t, [{key :: binary, value :: iolist}]) :: iolist
-  def pairs_to_iolist(t, pairs) do
-    with_selected(t, &Source.pairs_to_iolist(&1, pairs))
+  @spec pairs_to_iodata(t, [{key :: binary, value :: iodata}]) :: iodata
+  def pairs_to_iodata(t, pairs) do
+    with_selected(t, &Source.pairs_to_iodata(&1, pairs))
   end
 
-  @spec pair_to_iolist(t, key :: binary, value :: iolist) :: iolist
-  def pair_to_iolist(t, key, value) do
-    with_selected(t, &Source.pair_to_iolist(&1, key, value))
+  @spec pair_to_iodata(t, key :: binary, value :: iodata) :: iodata
+  def pair_to_iodata(t, key, value) do
+    with_selected(t, &Source.pair_to_iodata(&1, key, value))
   end
 
   # enum values mapper

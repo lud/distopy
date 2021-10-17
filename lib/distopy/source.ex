@@ -11,7 +11,7 @@ defprotocol Distopy.Source do
   @spec updatable?(t) :: boolean
   def updatable?(t)
 
-  @spec list_sources(t) :: [{group_key :: term, display_name :: iolist}]
+  @spec list_sources(t) :: [{group_key :: term, display_name :: iodata}]
   def list_sources(t)
 
   @spec select_source(t, group_key :: term) :: t
@@ -26,7 +26,7 @@ defprotocol Distopy.Source do
   @spec selected?(t, group_key :: term) :: boolean
   def selected?(t, source)
 
-  @spec display_name(t) :: iolist
+  @spec display_name(t) :: iodata
   def display_name(t)
 
   @spec get_value(t, key :: binary) :: binary
@@ -52,7 +52,7 @@ defprotocol Distopy.Source do
   @spec put_sub(t, group_key :: term, sub_source :: term) :: t
   def put_sub(t, group_key, sub_source)
 
-  @spec display_value(t, key :: binary) :: iolist
+  @spec display_value(t, key :: binary) :: iodata
   def display_value(t, key)
 
   @spec add_pair(t, key :: binary, value :: binary) :: {:ok, t} | {:error, binary}
@@ -61,11 +61,11 @@ defprotocol Distopy.Source do
   @spec delete_key(t, key :: binary) :: {:ok, t} | {:error, binary}
   def delete_key(t, key)
 
-  @spec pairs_to_iolist(t, [{key :: binary, value :: iolist}]) :: iolist
-  def pairs_to_iolist(t, pairs)
+  @spec pairs_to_iodata(t, [{key :: binary, value :: iodata}]) :: iodata
+  def pairs_to_iodata(t, pairs)
 
-  @spec pair_to_iolist(t, key :: binary, value :: iolist) :: iolist
-  def pair_to_iolist(t, key, value)
+  @spec pair_to_iodata(t, key :: binary, value :: iodata) :: iodata
+  def pair_to_iodata(t, key, value)
 end
 
 defmodule Distopy.Source.Helpers do

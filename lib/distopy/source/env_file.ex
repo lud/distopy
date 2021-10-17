@@ -2,6 +2,12 @@ defmodule Distopy.Source.EnvFile do
   @enforce_keys [:path, :vars, :hide_values]
   defstruct @enforce_keys
 
+  @type t :: %__MODULE__{
+          path: binary,
+          vars: %{optional(binary) => binary},
+          hide_values: boolean
+        }
+
   def new(path, opts \\ []) do
     if File.regular?(path) do
       case Dotenvy.source([path], side_effect: false, vars: %{}) do
@@ -27,7 +33,7 @@ defimpl Distopy.Source, for: Distopy.Source.EnvFile do
   alias Distopy.Source.EnvFile
   import Distopy.Source.Helpers
 
-  @type t :: %EnvFile{}
+  @type t :: EnvFile.t()
 
   @spec list_keys(t) :: [binary]
   def list_keys(t), do: Map.keys(t.vars)
@@ -41,7 +47,7 @@ defimpl Distopy.Source, for: Distopy.Source.EnvFile do
   @spec updatable?(t) :: boolean
   def updatable?(_), do: true
 
-  @spec list_sources(t) :: [{group_key :: term, display_name :: iolist}]
+  @spec list_sources(t) :: [{group_key :: term, display_name :: iodata}]
   def list_sources(_),
     do: invalid_group!()
 
@@ -59,18 +65,18 @@ defimpl Distopy.Source, for: Distopy.Source.EnvFile do
   @spec put_sub(t, group_key :: term, sub_source :: term) :: t
   def put_sub(_t, _group_key, _sub_source), do: invalid_group!()
 
-  @spec display_name(t) :: iolist
+  @spec display_name(t) :: iodata
   def display_name(%{path: path}),
     do: path
 
   @spec get_value(t, key :: binary()) :: binary()
-  def get_value(t, key) when is_map_key(t.vars, key),
-    do: Map.fetch!(t.vars, key)
+  def get_value(%{vars: vars}, key) when is_map_key(vars, key),
+    do: Map.fetch!(vars, key)
 
-  def get_value(t, key) when is_map_key(t.vars, key),
+  def get_value(t, key),
     do: invalid_key!(t, key)
 
-  @spec display_value(t, key :: binary) :: iolist
+  @spec display_value(t, key :: binary) :: iodata
   def display_value(%{hide_values: hide?} = t, key) do
     value = get_value(t, key)
 
@@ -89,15 +95,15 @@ defimpl Distopy.Source, for: Distopy.Source.EnvFile do
     {:ok, update_in(t.vars, &Map.delete(&1, key))}
   end
 
-  @spec pairs_to_iolist(t, [{key :: binary, value :: iolist}]) :: iolist
-  def pairs_to_iolist(t, pairs) do
+  @spec pairs_to_iodata(t, [{key :: binary, value :: iodata}]) :: iodata
+  def pairs_to_iodata(t, pairs) do
     pairs
-    |> Enum.map(fn {k, v} -> pair_to_iolist(t, k, v) end)
+    |> Enum.map(fn {k, v} -> pair_to_iodata(t, k, v) end)
     |> Enum.intersperse("\n")
   end
 
-  @spec pair_to_iolist(t, key :: binary, value :: iolist) :: iolist
-  def pair_to_iolist(_t, key, value) do
+  @spec pair_to_iodata(t, key :: binary, value :: iodata) :: iodata
+  def pair_to_iodata(_t, key, value) do
     [key, "=", value]
   end
 
@@ -106,7 +112,7 @@ defimpl Distopy.Source, for: Distopy.Source.EnvFile do
 
     f = File.open!(path, [:append])
     if not nl?, do: IO.write(f, "\n")
-    IO.puts(f, pair_to_iolist(t, key, value))
+    IO.puts(f, pair_to_iodata(t, key, value))
     :ok = File.close(f)
   end
 

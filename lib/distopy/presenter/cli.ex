@@ -22,7 +22,7 @@ defmodule Distopy.Presenter.CLI do
       |> Enum.sort()
       |> Enum.map(&{&1, display_value(dist_source, &1)})
 
-    varlist = [?\n, pairs_to_iolist(env_source, pairs), ?\n]
+    varlist = [?\n, pairs_to_iodata(env_source, pairs), ?\n]
 
     warn(:stdio, varlist)
   end
@@ -41,7 +41,7 @@ defmodule Distopy.Presenter.CLI do
       |> Enum.sort()
       |> Enum.map(&{&1, display_value(env_source, &1)})
 
-    varlist = [?\n, pairs_to_iolist(dist_source, pairs), ?\n]
+    varlist = [?\n, pairs_to_iodata(dist_source, pairs), ?\n]
 
     warn(:stdio, varlist)
   end
@@ -75,7 +75,7 @@ defmodule Distopy.Presenter.CLI do
     disp_prov = colored(display_name(providing_source), providing_color)
 
     value_disp = display_value(providing_source, key)
-    pair_display = pair_to_iolist(missing_source, key, value_disp)
+    pair_display = pair_to_iodata(missing_source, key, value_disp)
 
     info([
       "fixing ",
@@ -126,11 +126,11 @@ defmodule Distopy.Presenter.CLI do
   end
 
   defp build_choice(choices) when is_list(choices) do
-    {revorder, iolist, actions} =
+    {revorder, iodata, actions} =
       Enum.reduce(choices, {[], [], []}, fn
-        {letter, display, action}, {letters, iolist, actions}
+        {letter, display, action}, {letters, iodata, actions}
         when letter in ?a..?z and is_function(action) ->
-          {[letter | letters], [[?[, letter, ?], 32, display] | iolist],
+          {[letter | letters], [[?[, letter, ?], 32, display] | iodata],
            [{letter, action} | actions]}
 
         nil, acc ->
@@ -140,7 +140,7 @@ defmodule Distopy.Presenter.CLI do
     %{
       actions: Map.new(actions),
       order: :lists.reverse(revorder),
-      display: iolist |> :lists.reverse() |> Enum.intersperse(10)
+      display: iodata |> :lists.reverse() |> Enum.intersperse(10)
     }
   end
 
