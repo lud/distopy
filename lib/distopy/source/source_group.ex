@@ -122,3 +122,11 @@ defimpl Distopy.Source, for: Distopy.Source.SourceGroup do
     %SourceGroup{t | sources: Map.put(sources, sel, new_sub)}
   end
 end
+
+defimpl Inspect, for: Distopy.Source.SourceGroup do
+  def inspect(sg, opts) do
+    selected = Map.fetch!(sg.sources, sg.selected)
+    n = map_size(sg.sources) - 1
+    "#SourceGroup<[#{Inspect.inspect(selected, opts)} (+#{n})]>"
+  end
+end

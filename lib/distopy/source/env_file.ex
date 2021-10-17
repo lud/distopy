@@ -139,3 +139,7 @@ defimpl Distopy.Source, for: Distopy.Source.EnvFile do
     |> Kernel.==("\n")
   end
 end
+
+defimpl Inspect, for: Distopy.Source.EnvFile do
+  def inspect(ef, _), do: "#EnvFile<#{ef.path}>"
+end

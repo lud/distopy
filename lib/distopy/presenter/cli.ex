@@ -55,15 +55,21 @@ defmodule Distopy.Presenter.CLI do
   end
 
   def fix_missing(keys, dist_source, env_source) when is_list(keys) do
-    Enum.reduce(keys, {_missing = env_source, _providing = dist_source}, fn key, sources ->
-      fix_undef(key, sources, {:cyan, :magenta})
-    end)
+    {env, dist} =
+      reduce_fix(keys, {_missing = env_source, _providing = dist_source}, {:cyan, :magenta})
+
+    {:ok, {dist, env}}
   end
 
   def fix_extra(keys, dist_source, env_source) when is_list(keys) do
-    Enum.reduce(keys, {_missing = dist_source, _providing = env_source}, fn key, sources ->
-      fix_undef(key, sources, {:magenta, :cyan})
-    end)
+    {dist, env} =
+      reduce_fix(keys, {_missing = dist_source, _providing = env_source}, {:magenta, :cyan})
+
+    {:ok, {dist, env}}
+  end
+
+  defp reduce_fix(keys, {missing_source, providing_source}, colors) do
+    Enum.reduce(keys, {missing_source, providing_source}, &fix_undef(&1, &2, colors))
   end
 
   defp fix_undef(

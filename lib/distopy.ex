@@ -42,22 +42,18 @@ defmodule Distopy do
     end
   end
 
-  def run_fixer(
-        dist,
-        env,
-        %{missing: missing, extra: extra} = _diff
-      ) do
-    if length(missing) > 0, do: CLI.fix_missing(missing, dist, env)
-    if length(extra) > 0, do: CLI.fix_extra(extra, dist, env)
-    :ok
+  def run_fixer(dist, env, %{missing: missing, extra: extra}) do
+    {:ok, {dist, env}} = CLI.fix_missing(missing, dist, env)
+    {:ok, {dist, env}} = CLI.fix_extra(extra, dist, env)
+    {:ok, {dist, env}}
   end
 
   def diff_and_fix(dist, env) do
     diff = diff_keys(dist, env)
 
     with :error <- diff_and_output(dist, env, diff, show_fix_opt: false),
-         :ok <- run_fixer(dist, env, diff) do
-      diff_and_output(dist, env, diff, show_fix_opt: false)
+         {:ok, {dist, env}} <- run_fixer(dist, env, diff) do
+      diff_and_output(dist, env, diff_keys(dist, env), show_fix_opt: false)
     end
   end
 end
