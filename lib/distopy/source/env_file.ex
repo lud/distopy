@@ -135,8 +135,15 @@ defimpl Distopy.Source, for: Distopy.Source.EnvFile do
     file
     |> File.stream!()
     |> Enum.at(-1)
-    |> String.at(-1)
-    |> Kernel.==("\n")
+    |> case do
+      nil ->
+        false
+
+      line ->
+        line
+        |> String.at(-1)
+        |> Kernel.==("\n")
+    end
   end
 end
 
