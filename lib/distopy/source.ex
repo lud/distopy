@@ -105,7 +105,7 @@ defprotocol Distopy.Source do
   a tuple with `group_key` as an unique identifier of the sub-source in the
   group, and the sub-source itself.
 
-  Do not mistake `key` for `group_key`. The former indetifies an environment
+  Do not mistake `key` for `group_key`. The former identifies an environment
   variable name while the latter identifies a sub-source in a group.
   """
   @doc group: true
