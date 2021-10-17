@@ -1,19 +1,93 @@
 defprotocol Distopy.Source do
+  @doc """
+  Returns the list of environment variable names defined in the source.
+  """
   @spec list_keys(t) :: [binary]
   def list_keys(t)
 
+  @doc """
+  Returns wether the given environment variable is defined in the source.
+  """
   @spec has_key?(t, key :: binary) :: boolean
   def has_key?(t, key)
 
+  @doc """
+  Returns wether the source has sub-sources, _i.e._ is a group of sources.
+  """
   @spec source_group?(t) :: boolean
   def source_group?(t)
 
+  @doc """
+  Returns wether the source can be modified by adding or remomving environment
+  variables.
+  """
   @spec updatable?(t) :: boolean
   def updatable?(t)
 
+  @doc """
+  Returns the name of the source for display purposes.
+  """
+  @spec display_name(t) :: iodata
+  def display_name(t)
+
+  @doc """
+  Get the value associated to the environment variables identified by `key`.
+  It should raise if the variable is not defined.
+  """
+  @spec get_value(t, key :: binary) :: binary
+  def get_value(t, key)
+
+  @doc """
+  Returns the reprensentation of a value for display purposes. Instead of
+  returning the raw binary value, it is possible to return text like
+  `"hidden value"`, a parsed reprensentation of a JSON string, _etc_.
+  """
+  @spec display_value(t, key :: binary) :: iodata
+  def display_value(t, key)
+
+  @doc """
+  Creates a new environment variable in the source. It will only be called if
+  the source returns `true` from `updatable?/1`.
+  """
+  @spec add_pair(t, key :: binary, value :: binary) :: {:ok, t} | {:error, binary}
+  def add_pair(t, key, value)
+
+  @doc """
+  Deletes the environment variable identified by `key` in the source.
+  """
+  @spec delete_key(t, key :: binary) :: {:ok, t} | {:error, binary}
+  def delete_key(t, key)
+
+  @doc """
+  Returns a displayable version of the given list of environment variables keys
+  and values.
+
+  The keys may or may not be defined in the source as the values are passed to
+  the function.
+  """
+  @spec pairs_to_iodata(t, [{key :: binary, value :: iodata}]) :: iodata
+  def pairs_to_iodata(t, pairs)
+
+  @doc """
+  Represents a single key/value pair for display purposes.
+
+  See `pairs_to_iodata/2`.
+  """
+  @spec pair_to_iodata(t, key :: binary, value :: iodata) :: iodata
+  def pair_to_iodata(t, key, value)
+
+  @doc """
+  Returns a list of sub-sources identified by an unique "group" key.
+  """
+  @doc group: true
   @spec list_sources(t) :: [{group_key :: term, display_name :: iodata}]
   def list_sources(t)
 
+  @doc """
+  Sets the current selected source identified by `group_key`.  A group of
+  sources shoud add new environment variables to the currently selected sub.
+  """
+  @doc group: true
   @spec select_source(t, group_key :: term) :: t
   def select_source(t, source)
 
@@ -25,12 +99,6 @@ defprotocol Distopy.Source do
   @doc group: true
   @spec selected?(t, group_key :: term) :: boolean
   def selected?(t, source)
-
-  @spec display_name(t) :: iodata
-  def display_name(t)
-
-  @spec get_value(t, key :: binary) :: binary
-  def get_value(t, key)
 
   @doc """
   Returns the sub-source that defines the key `key`. The function must return
@@ -51,21 +119,6 @@ defprotocol Distopy.Source do
   @doc group: true
   @spec put_sub(t, group_key :: term, sub_source :: term) :: t
   def put_sub(t, group_key, sub_source)
-
-  @spec display_value(t, key :: binary) :: iodata
-  def display_value(t, key)
-
-  @spec add_pair(t, key :: binary, value :: binary) :: {:ok, t} | {:error, binary}
-  def add_pair(t, key, value)
-
-  @spec delete_key(t, key :: binary) :: {:ok, t} | {:error, binary}
-  def delete_key(t, key)
-
-  @spec pairs_to_iodata(t, [{key :: binary, value :: iodata}]) :: iodata
-  def pairs_to_iodata(t, pairs)
-
-  @spec pair_to_iodata(t, key :: binary, value :: iodata) :: iodata
-  def pair_to_iodata(t, key, value)
 end
 
 defmodule Distopy.Source.Helpers do

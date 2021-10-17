@@ -7,7 +7,9 @@ defmodule Distopy.MixProject do
       version: "0.1.0",
       elixir: "~> 1.12",
       start_permanent: false,
-      deps: deps()
+      deps: deps(),
+      docs: docs(),
+      source_url: "https://github.com/lud/distopy"
     ]
   end
 
@@ -20,7 +22,17 @@ defmodule Distopy.MixProject do
   defp deps do
     [
       {:dotenvy, "~> 0.5.0"},
-      {:dialyxir, "~> 1.1", only: :dev}
+      {:dialyxir, "~> 1.1", only: :dev},
+      {:ex_doc, "~> 0.24", only: :dev, runtime: false}
+    ]
+  end
+
+  defp docs do
+    [
+      source_ref: "main",
+      formatters: ["html"],
+      nest_modules_by_prefix: [],
+      groups_for_functions: ["Source group callbacks": &(&1[:group] == true)]
     ]
   end
 end
