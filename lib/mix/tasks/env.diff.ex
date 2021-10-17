@@ -99,28 +99,13 @@ defmodule Mix.Tasks.Env.Diff do
     |> IO.puts()
   end
 
-  defp do_run(ctx),
-    do: do_run(ctx, true)
+  defp do_run(%{fix: fix?} = ctx) do
+    %{dist_source: dist, env_source: env} = build_sources(ctx)
 
-  defp do_run(%{fix: fix?} = ctx, show_fix_opt?) do
-    sources = build_sources(ctx)
-    diff = diff(sources)
-
-    case Distopy.display_diff(sources, diff) do
-      :ok ->
-        :ok
-
-      :error when fix? ->
-        Distopy.run_fixer(sources, diff)
-        info("Fixer finished, checking new values...\n")
-        do_run(%{ctx | fix: false}, false)
-
-      :error when show_fix_opt? ->
-        IO.puts(:stderr, "\nrun with --fix to run the interactive fixer")
-        :error
-
-      :error ->
-        :error
+    if fix? do
+      Distopy.diff_and_fix(dist, env)
+    else
+      Distopy.diff_and_output(dist, env)
     end
     |> case do
       :ok -> :ok
@@ -142,9 +127,5 @@ defmodule Mix.Tasks.Env.Diff do
       end
 
     %{dist_source: dist, env_source: env}
-  end
-
-  defp diff(%{dist_source: dist, env_source: env}) do
-    %{missing: _, extra: _} = Distopy.diff_keys(dist, env)
   end
 end

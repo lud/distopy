@@ -4,8 +4,6 @@
 
 ## Installation
 
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `distopy` to your list of dependencies in `mix.exs`:
 
 ```elixir
 def deps do
@@ -15,7 +13,14 @@ def deps do
 end
 ```
 
-Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at [https://hexdocs.pm/distopy](https://hexdocs.pm/distopy).
+## Usage
 
+The simplest way of using the tool is by using its mix task:
+
+    mix env.diff --fix --file .env --file .env.dev --dist .env.dist
+
+Multiple environment or dist files can be added and will then be treated as a
+group. For instance, if the dist file defines the `MY_ENV` variable, and that
+variable is only in `.env` but not in `.env.test`, passing both environment
+files to the command will not display an error car the variable is found in the
+given _group_.
