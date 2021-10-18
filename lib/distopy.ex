@@ -26,10 +26,13 @@ defmodule Distopy do
     check_extra = Keyword.get(opts, :extra) != false
     check_missing = Keyword.get(opts, :missing) != false
 
-    invalid? = (check_missing and length(missing) >= 0) or (check_extra and length(extra) >= 0)
+    invalid? = (check_missing and length(missing) > 0) or (check_extra and length(extra) > 0)
 
-    if check_missing and length(missing) >= 0, do: CLI.print_missing(missing, dist, env)
-    if check_extra and length(extra) >= 0, do: CLI.print_extra(extra, dist, env)
+    if check_missing and length(missing) > 0,
+      do: CLI.print_missing(missing, dist, env)
+
+    if check_extra and length(extra) > 0,
+      do: CLI.print_extra(extra, dist, env)
 
     cond do
       not invalid? ->
