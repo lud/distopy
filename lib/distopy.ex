@@ -26,9 +26,6 @@ defmodule Distopy do
     check_extra = Keyword.get(opts, :extra) != false
     check_missing = Keyword.get(opts, :missing) != false
 
-    check_extra |> IO.inspect(label: ~S[check_extra])
-    check_missing |> IO.inspect(label: ~S[check_missing])
-
     invalid? = (check_missing and length(missing) > 0) or (check_extra and length(extra) > 0)
 
     if check_missing and length(missing) > 0,
