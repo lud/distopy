@@ -10,7 +10,8 @@ defmodule Mix.Tasks.Env.Diff do
     file: [:string, :keep],
     fix: :boolean,
     extra: :boolean,
-    missing: :boolean
+    missing: :boolean,
+    fail: :boolean
   ]
 
   @impl true
@@ -38,13 +39,14 @@ defmodule Mix.Tasks.Env.Diff do
     end
   end
 
-  defp collect_opts(optslist) do
-    optslist
+  defp collect_opts(opts) do
+    opts
     |> Enum.reduce(
-      %{env_files: [], dist_files: [], fix: false, extra: true, missing: true},
+      %{env_files: [], dist_files: [], fix: false, extra: true, missing: true, fail: true},
       fn
         {:file, file}, acc -> add_file(acc, :env_files, file)
         {:dist, file}, acc -> add_file(acc, :dist_files, file)
+        {:fail, v}, acc when is_boolean(v) -> Map.put(acc, :fail, v)
         {:fix, v}, acc when is_boolean(v) -> Map.put(acc, :fix, v)
         {:extra, v}, acc when is_boolean(v) -> Map.put(acc, :extra, v)
         {:missing, v}, acc when is_boolean(v) -> Map.put(acc, :missing, v)
@@ -117,7 +119,7 @@ defmodule Mix.Tasks.Env.Diff do
     colored(String.pad_trailing(text, 20), :bright)
   end
 
-  defp do_run(%{fix: fix?, extra: extra, missing: missing} = ctx, impls) do
+  defp do_run(%{fix: fix?, extra: extra, missing: missing, fail: fail?} = ctx, impls) do
     {dist, env} = build_sources(ctx, impls)
 
     if fix? do
@@ -127,7 +129,7 @@ defmodule Mix.Tasks.Env.Diff do
     end
     |> case do
       :ok -> :ok
-      :error -> abort()
+      :error -> if fail?, do: abort(), else: :ok
     end
   end
 
