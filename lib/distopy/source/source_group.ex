@@ -48,9 +48,16 @@ defimpl Distopy.Source, for: Distopy.Source.SourceGroup do
     do: sel == group_key
 
   @spec display_name(t) :: iodata
-  def display_name(%{sources: sources} = t) do
-    n = map_size(sources) - 1
-    ["group [", with_selected(t, &Source.display_name/1), " (+", Integer.to_charlist(n), ")]"]
+  def display_name(%{sources: sources, selected: sel} = t) do
+    selected = Map.fetch!(sources, sel)
+    other_sources = sources |> Map.delete(sel) |> Map.values()
+
+    selected_name = [Source.display_name(selected), ?*]
+    other_names = Enum.map(other_sources, &Source.display_name/1)
+
+    names = Enum.intersperse([selected_name | other_names], ", ")
+
+    ["group [", names, "]"]
   end
 
   @spec get_value(t, key :: binary) :: binary
