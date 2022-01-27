@@ -135,13 +135,13 @@ defmodule Mix.Tasks.Env.Diff do
 
   defp build_sources(%{dist_files: dist_files, env_files: env_files} = _ctx, impls) do
     dist =
-      case Enum.map(dist_files, &build_env_source(&1, impls)) do
+      case Enum.map(dist_files, &build_env_source(&1, impls, :dist)) do
         [single] -> single
         list -> list |> Enum.into(%{}, &{&1.path, &1}) |> SourceGroup.new()
       end
 
     env =
-      case Enum.map(env_files, &build_env_source(&1, impls)) do
+      case Enum.map(env_files, &build_env_source(&1, impls, :env)) do
         [single] -> single
         list -> list |> Enum.into(%{}, &{&1.path, &1}) |> SourceGroup.new()
       end
@@ -149,7 +149,7 @@ defmodule Mix.Tasks.Env.Diff do
     {dist, env}
   end
 
-  defp build_env_source(path, impls) when is_binary(path) do
+  defp build_env_source(path, impls, kind) when is_binary(path) do
     builder =
       Enum.find(impls, fn {matcher, _impl} ->
         custom_file?(matcher, path)
@@ -165,7 +165,7 @@ defmodule Mix.Tasks.Env.Diff do
       {_, build} when is_function(build, 1) -> build.(path)
       {_, build} when is_atom(build) -> build.load_file(path)
       # IO.puts("using default .env parser to load #{path}")
-      nil -> EnvFile.new(path, hide_values: true)
+      nil -> EnvFile.new(path, hide_values: kind != :dist)
     end
   end
 
