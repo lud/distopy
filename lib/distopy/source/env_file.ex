@@ -1,11 +1,12 @@
 defmodule Distopy.Source.EnvFile do
-  @enforce_keys [:path, :vars, :hide_values]
+  @enforce_keys [:path, :vars, :hide_values, :mutable]
   defstruct @enforce_keys
 
   @type t :: %__MODULE__{
           path: binary,
           vars: %{optional(binary) => binary},
-          hide_values: boolean
+          hide_values: boolean,
+          mutable: boolean
         }
 
   def new(path, opts \\ []) do
@@ -17,7 +18,8 @@ defmodule Distopy.Source.EnvFile do
           %__MODULE__{
             path: path,
             vars: vars,
-            hide_values: !!Keyword.get(opts, :hide_values)
+            hide_values: !!Keyword.get(opts, :hide_values),
+            mutable: !!Keyword.get(opts, :mutable)
           }
 
         {:error, reason} ->
@@ -42,7 +44,7 @@ defimpl Distopy.Source, for: Distopy.Source.EnvFile do
   def has_key?(t, key), do: Map.has_key?(t.vars, key)
 
   @spec updatable?(t) :: boolean
-  def updatable?(_), do: true
+  def updatable?(%{mutable: mutable}), do: mutable
 
   @spec display_name(t) :: iodata
   def display_name(%{path: path}),

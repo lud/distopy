@@ -165,7 +165,7 @@ defmodule Mix.Tasks.Env.Diff do
       {_, build} when is_function(build, 1) -> build.(path)
       {_, build} when is_atom(build) -> build.load_file(path)
       # IO.puts("using default .env parser to load #{path}")
-      nil -> EnvFile.new(path, hide_values: kind != :dist)
+      nil -> EnvFile.new(path, hide_values: kind != :dist, mutable: kind != :dist)
     end
   end
 
