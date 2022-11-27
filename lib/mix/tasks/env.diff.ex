@@ -50,6 +50,7 @@ defmodule Mix.Tasks.Env.Diff do
         {:fix, v}, acc when is_boolean(v) -> Map.put(acc, :fix, v)
         {:extra, v}, acc when is_boolean(v) -> Map.put(acc, :extra, v)
         {:missing, v}, acc when is_boolean(v) -> Map.put(acc, :missing, v)
+        {other, _}, _ -> abort("unknown option --#{Atom.to_string(other)}")
       end
     )
   end
