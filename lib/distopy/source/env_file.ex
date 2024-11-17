@@ -11,20 +11,16 @@ defmodule Distopy.Source.EnvFile do
 
   def new(path, opts \\ []) do
     if File.regular?(path) do
-      case Dotenvy.source([path], side_effect: false, vars: %{}) do
-        {:ok, vars} ->
-          if Keyword.has_key?(opts, :color), do: raise("color deprecated")
+      vars = Nvir.dotenv!(path)
 
-          %__MODULE__{
-            path: path,
-            vars: vars,
-            hide_values: !!Keyword.get(opts, :hide_values),
-            mutable: !!Keyword.get(opts, :mutable)
-          }
+      if Keyword.has_key?(opts, :color), do: raise("color deprecated")
 
-        {:error, reason} ->
-          raise "could not load env file #{path}: #{inspect(reason)}"
-      end
+      %__MODULE__{
+        path: path,
+        vars: vars,
+        hide_values: !!Keyword.get(opts, :hide_values),
+        mutable: !!Keyword.get(opts, :mutable)
+      }
     else
       raise "could not load env file #{path}: file not found"
     end

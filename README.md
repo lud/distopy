@@ -28,9 +28,6 @@ given _group_.
 
 ## Usage with custom files
 
-The `env.diff` mix task handles env files thanks to
-[Dotenvy](https://hexdocs.pm/dotenvy/readme.html).
-
 In order to use other types of sources (think CI configuration files like
 `.gitlab-ci.yml`, env variables documentation in markdown etc), the
 `Distopy.Source` protocol should be implemented for custom sources and handed to

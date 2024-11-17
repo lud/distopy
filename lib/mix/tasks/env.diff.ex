@@ -172,7 +172,7 @@ defmodule Mix.Tasks.Env.Diff do
 
   defp custom_file?(matcher, path) do
     cond do
-      Regex.regex?(matcher) -> Regex.match?(matcher, path)
+      match?(%Regex{}, matcher) -> Regex.match?(matcher, path)
       is_function(matcher, 1) -> matcher.(path)
       true -> false
     end

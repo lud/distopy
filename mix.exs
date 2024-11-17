@@ -31,7 +31,7 @@ defmodule Distopy.MixProject do
 
   defp deps do
     [
-      {:dotenvy, "~> 0.5.0"},
+      {:nvir, "~> 0.9"},
       {:dialyxir, "~> 1.1", only: :dev},
       {:ex_doc, "~> 0.24", only: :dev, runtime: false}
     ]

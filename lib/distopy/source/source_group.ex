@@ -48,7 +48,7 @@ defimpl Distopy.Source, for: Distopy.Source.SourceGroup do
     do: sel == group_key
 
   @spec display_name(t) :: iodata
-  def display_name(%{sources: sources, selected: sel} = t) do
+  def display_name(%{sources: sources, selected: sel}) do
     selected = Map.fetch!(sources, sel)
     other_sources = sources |> Map.delete(sel) |> Map.values()
 
